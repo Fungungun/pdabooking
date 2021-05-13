@@ -14,6 +14,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 
+import winsound
 
 logging.basicConfig(
     handlers=[logging.FileHandler("run.log", mode='a'),
@@ -59,11 +60,25 @@ def random_wait(a=1, b=2):
 def wait(n):
     time.sleep(n)
 
+def check_if_expected_datetime(search_res, expected_month, expected_day):
+
+    res_month = search_res[3:5]
+    res_day = search_res[:2]
+
+    if (res_month == expected_month) and (res_day <= expected_day):
+        return True
+    else:
+        return False
+    
+
 
 options = webdriver.ChromeOptions()
-options.add_argument('headless')
+# options.add_argument('headless')
 driver = webdriver.Chrome('chromedriver.exe', chrome_options=options)
 # driver = webdriver.PhantomJS()
+
+driver.implicitly_wait(30)
+
 driver.get(('https://online.transport.wa.gov.au/tso/selfservice/public/login.jsf'))
 
 elem = driver.find_element_by_name("loginForm:userId")
@@ -76,23 +91,35 @@ driver.find_element_by_name("loginForm:loginButton").click()
 wait(10)
 driver.find_element_by_id("menuForm:menubar_licence").click()
 wait(10)
-driver.find_element_by_id("form:bookPDA").click()
-wait(10)
+try:
+    driver.find_element_by_id("form:bookPDA").click()
+except:
+    driver.find_element_by_id("form:j_idt219").click() # manage booking
+    driver.find_element_by_xpath("//*[@id='id6']").click() # manage booking
+wait(5)
 
 # Search Availability
-driver.find_element_by_name("manageBookingContainer:search").click()
-wait(5)
+try:
+    driver.find_element_by_name("manageBookingContainer:search").click()
+    wait(5)
+except:
+    logging.info('Change booking')    
 
 logging.info('Get Sites')
 # Select site
 elem = Select(driver.find_element_by_name("searchBookingContainer:siteCode"))
 num_of_site = len(elem.options)
-avail_booking = {elem.options[i].text:[] for i in range(num_of_site)}
+
 
 logging.info('Start Scanning')
 while True:
+    avail_booking = {elem.options[i].text:[] for i in range(num_of_site)}
+
     for i in range(num_of_site):
+        
         site = elem.options[i].text
+        if site != "Cannington":
+            continue
 
         elem.select_by_index(i)
 
@@ -106,20 +133,42 @@ while True:
             elem_res = driver.find_element_by_name("searchBookingContainer:searchResults:searchResultGroup")
         except:
             pass
-
+        
         if elem_res is not None:
             elem_booking = driver.find_elements_by_id("searchResultRadioLabel")
-            avail_booking[site] = [x.text for x in elem_booking]
+            logging.info([x.text for x in elem_booking])
+            for i in range(elem_booking):
+                if check_if_expected_datetime(elem_booking[i].text, 5, 21):
+                    msg = f"Make booking {elem_booking[i].text}"
+                    logging.info(msg)
+                    send_msg_via_mail(msg)
+                    logging.info("Email sent")
+                    
+                    driver.find_element_by_id(f"searchResultRadio{i}").click() # select booking
+                    wait(1)
+                    driver.find_element_by_xpath("//*[@id='id1a']").click() # confirm booking 
+                    # for i in range(30):
+                    #     winsound.Beep(2000, 2000)
+                    
+                    
 
-        random_wait(1, 5)
-    logging.info(avail_booking)
+
+
+
+
+    #         avail_booking[site] = [x.text for x in elem_booking]
+
+    # logging.info(avail_booking)
     
-    if len(avail_booking['Cannington']) > 0:
-        msg = ', '.join(avail_booking['Cannington'])
-        send_msg_via_mail(msg)
-        logging.info("Email sent")
-    else:
-        logging.info("Nothing available. Waiting for the next run.")
+    # # if len(avail_booking['Cannington']) > 0:
+    # if any([int(x[3:5]) <= 5 and int(x[:2]) <= 23 for x in avail_booking['Cannington']]): # "05/05/2021 at 1:00 PM" if month <= 5 and day <= 16
+    #     for i in range(30):
+    #         winsound.Beep(2000, 2000)
+    #     msg = ', '.join(avail_booking['Cannington'])
+    #     send_msg_via_mail(msg)
+    #     logging.info("Email sent")
+    # else:
+    #     logging.info("Nothing available. Waiting for the next run.")
         
     
-    random_wait(1500, 1600)
+    random_wait(60, 120)
