@@ -62,15 +62,14 @@ def wait(n):
 
 def check_if_expected_datetime(search_res, expected_month, expected_days):
 
-    res_month = search_res[3:5]
-    res_day = search_res[:2]
+    res_month = int(search_res[3:5])
+    res_day = int(search_res[:2])
 
     if (res_month == expected_month) and (res_day in expected_days):
         return True
     else:
         return False
     
-
 
 options = webdriver.ChromeOptions()
 # options.add_argument('headless')
@@ -137,8 +136,8 @@ while True:
         if elem_res is not None:
             elem_booking = driver.find_elements_by_id("searchResultRadioLabel")
             logging.info([x.text for x in elem_booking])
-            for i in range(elem_booking):
-                if check_if_expected_datetime(elem_booking[i].text, 5, [18, 19, 20]):
+            for i in range(len(elem_booking)):
+                if check_if_expected_datetime(elem_booking[i].text, 5, [24, 25, 26, 27, 28]):
                     msg = f"Make booking {elem_booking[i].text}"
                     logging.info(msg)
                     send_msg_via_mail(msg)
@@ -149,6 +148,9 @@ while True:
                     driver.find_element_by_xpath("//*[@id='id1a']").click() # confirm booking 
                     # for i in range(30):
                     #     winsound.Beep(2000, 2000)
+                    exit()
+        logging.info("Nothing available. Waiting for the next run.")
+                
                     
     #         avail_booking[site] = [x.text for x in elem_booking]
 
