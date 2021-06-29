@@ -1,6 +1,6 @@
 
 import random
-import time
+import time as ti
 
 import smtplib
 from email.mime.text import MIMEText
@@ -36,10 +36,10 @@ def send_msg_via_mail(msg):
 
 def random_wait(a=1, b=2):
     t = 1000
-    time.sleep(random.randint(a*t,b*t) / 1.0 / t)
+    ti.sleep(random.randint(a*t,b*t) / 1.0 / t)
 
 def wait(n):
-    time.sleep(n)
+    ti.sleep(n)
 
 def convert_datetime_format(unformatted_datetime):
     return datetime.strptime(unformatted_datetime, "%d/%m/%Y at %I:%M %p")

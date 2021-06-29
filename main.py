@@ -2,7 +2,7 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import Select
 
 import logging
-from datetime import date, time
+from datetime import datetime, date, time
 
 from utils import *
 
@@ -14,8 +14,8 @@ logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
                     datefmt='%d/%m/%y %H:%M:%S')
 
-start_date = date(2021, 5, 28)
-end_date = date(2021, 6, 3)
+start_date = date(2021, 6, 1)
+end_date = date(2021, 6, 13)
 start_time = time(7, 0, 0)
 end_time = time(18, 0, 0)
 
@@ -25,7 +25,6 @@ if __name__ == "__main__":
     options = webdriver.ChromeOptions()
     options.add_argument('headless')
     driver = webdriver.Chrome('chromedriver.exe', chrome_options=options)
-    # driver = webdriver.PhantomJS()
 
     driver.implicitly_wait(30)
 
@@ -93,12 +92,11 @@ if __name__ == "__main__":
                         logging.info(msg)
                         driver.find_element_by_id(f"searchResultRadio{i}").click() # select booking
                         wait(1)
-                        driver.find_element_by_xpath("//*[@id='id1a']").click() # confirm booking 
+                        # driver.find_element_by_xpath("//*[@id='id1a']").click() # confirm booking 
+                        driver.find_element_by_xpath("//*[@id='id17']").click() # confirm booking 
                         send_msg_via_mail(msg)
                         logging.info("Email sent")
                         exit()
             logging.info("Nothing available. Waiting for the next run.")
                     
-            
-        
         random_wait(60, 120)
